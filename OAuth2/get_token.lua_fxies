@@ -1,0 +1,52 @@
+1. get_token.lua
+--------------------------------
+the redis key is not correct: 
+
+>>>> Current
+red:hgetall("c:".. params.client_id)
+
+<<<< should be
+red:hgetall("c:".. params.code) 
+
+function generate_access_token_for(params)
+  local ok, err = red:connect("127.0.0.1", 6379)
+  ok, err =  red:hgetall("c:".. params.code)
+  if ok[1] == nil then
+    ngx.say("expired_code")
+    return ngx.exit(ngx.HTTP_OK)
+  else
+    local client_data = red:array_to_hash(ok)
+    if params.code == client_data.code and  check_client_secret(params.client_id, params.client_secret) then
+        return client_data.pre_access_token
+    else
+      ngx.header.content_type = "application/json; charset=utf-8"
+      ngx.say({'{"error": "invalid authorization code"}'})
+      return ngx.exit(ngx.HTTP_FORBIDDEN)
+    end
+  end
+end
+
+2. get_token.lua
+
+The ngx.say("eeeerror") is meanning less to our client: 
+
+>>>>>
+ngx.say("eeeerror")
+
+<<<<<
+ngx.say("Invalid client_id") 
+
+local function store_token(client_id, token)
+  local stored = ngx.location.capture("/_threescale/oauth_store_token",
+    {method = ngx.HTTP_POST,
+    body =  "app_id=".. client_id ..
+    "&token=".. token})
+  if stored.status ~= 200 then
+    ngx.say("eeeerror")
+    ngx.exit(ngx.HTTP_OK)
+  end
+
+  ngx.header.content_type = "application/json; charset=utf-8"
+  ngx.say({'{"access_token": "'.. token .. '", "token_type": "bearer"}'})
+  ngx.exit(ngx.HTTP_OK)
+end

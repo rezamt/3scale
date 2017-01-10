@@ -1,0 +1,53 @@
+swagger: '2.0'
+info:
+  version: v1
+  title: OAuth for Sentiment API
+  description: OAuth2.0 Client Credentails Flow for authentication of our Sentiment
+    API.
+  contact:
+    name: 3scale Support Team
+    email: support@3scale.net
+    url: htpps://support.3scale.net
+host: inuit.auth0.com
+basePath: "/oauth"
+schemes:
+- https
+paths:
+  /token:
+    post:
+      description: This operation returns the access token for the API. You must call
+        this before calling any other endpoints.
+      operationId: oauth
+      responses:
+        200:
+          description: An array of products
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: OAuth 2.0 Access Token Request
+          required: true
+          schema:
+            $ref: '#/definitions/request'
+definitions:
+  request:
+    type: object
+    properties:
+      client_id:
+        type: string
+        description: You Application ID
+      client_secret:
+        type: string
+        description: Your Application Secret
+      grant_type:
+        type: string
+        description: OAuth2 Grant Type
+        default: client_credentials
+        enum:
+          - client_credentials
+          - authorization_code
+          - refresh_token
+          - password

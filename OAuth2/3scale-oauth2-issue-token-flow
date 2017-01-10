@@ -1,0 +1,56 @@
+=========================================================
+OAuth 2. Authorization Code (3legged OAuth)
+3 Scale Issues Token
+Your Application Authenticates User
+=========================================================
+
+Step 1: 
+GET http://ec2-13-54-188-111.ap-southeast-2.compute.amazonaws.com/authorize?client_id=20ed6a2f&redirect_uri=YOUR-AUTHENTICATION-SERVER-LOGIN-URL&response_type=code&scope=default
+
+
+
+function authorize(params)
+   -- scope is required because the provider needs to know which plan
+   -- is the user trying to log to
+   local required_params = {'client_id', 'redirect_uri', 'response_type', 'scope'}
+
+  if ts.required_params_present(required_params, params) and params["response_type"] == 'code' and check_return_url(params.client_id, params.redirect_uri) then
+    redirect_to_login(params)
+    elseif params["response_type"] ~= 'code' then
+      return false, 'unsupported_response_type'
+    else
+      ngx.log(0, ts.dump(params))
+      return false, 'invalid_request'
+    end
+    ts.error("we should never be here")
+  end
+
+  
+
+
+http://ec2-13-54-188-111.ap-southeast-2.compute.amazonaws.com/authorize?client_id=20ed6a2f&response_type=code&scope=default&redirect_url=https://inuit.auth0.com/authorize
+
+
+STEP 2:
+--------------
+YOUR APPLICATION Server will redirect user to the 3Scale in order to get the Authentication Code
+
+GET http://YOUR-MANAGED-API-GATEWAY/callback?scope=default&state=a11bb8267c5a74ed59b1d683a7e8978b1aeb2070&tok=7a8d568ad960a7105d254b54956282b1f7bdeb3e
+
+
+STEP 3:
+--------------
+YOUR APPLICATION Server via back channel will send the client_id, client_secret and authorization code to get the Access Token.
+
+POST http://YOUR-MANAGED-API-GATEWAY/oauth/token
+	code=be434a2d3f8fbf353faceefae5ef890480b0e1dc
+	&redirect_uri=https%3A%2F%2Fdevelopers.google.com%2Foauthplayground
+	&client_id=20ed6a2f
+	&client_secret=08a4b603a88307d0821aaeb50e5f92a7
+	&scope=default
+	&grant_type=authorization_code
+
+
+------------------------------------------
+client_id: 20ed6a2f
+client_secret: 08a4b603a88307d0821aaeb50e5f92a7
